@@ -1,0 +1,55 @@
+import org.codehaus.groovy.grails.commons.GrailsClassUtils as GCU
+import org.springframework.orm.hibernate3.SessionFactoryUtils
+import org.springframework.orm.hibernate3.SessionHolder
+import org.springframework.transaction.support.TransactionSynchronizationManager
+
+grailsHome = Ant.project.properties."environment.GRAILS_HOME"
+
+includeTargets << grailsScript("_GrailsArgParsing")
+includeTargets << grailsScript("Package")
+includeTargets << grailsScript("Bootstrap")
+
+target('default': "Mutate the database") {
+    depends(parseArguments)
+    def args = ["${basedir}/grails-app/mutations/una_prueba_20100416224152344.groovy"]
+    runScript args
+}
+
+
+def runScript(argsMap) {
+    if (argsMap.size() == 0) {
+        event("StatusError", ["Required script name parameter is missing"])
+        System.exit 1
+    }
+    compile()
+    classLoader = new URLClassLoader([classesDir.toURL()] as URL[], rootLoader)
+    Thread.currentThread().setContextClassLoader(classLoader)
+    loadApp()
+    configureApp()
+    configureHibernateSession()
+    argsMap.each { scriptFile ->
+        executeScript(scriptFile, classLoader)
+	chunks = scriptFile.split("/")
+	filename = chunks[chunks.size()-1]
+	chunks = filename.split("_")
+	mutationName = chunks.remove(chunks.size()-1).join("")
+	print mutationName
+    }
+}
+
+def configureHibernateSession() {
+	// without this you'll get a lazy initialization exception when using a many-to-many relationship
+	def sessionFactory = appCtx.getBean("sessionFactory")
+	def session = SessionFactoryUtils.getSession(sessionFactory, true)
+	TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(session))
+}
+ 
+def executeScript(scriptFile, classLoader) {
+    File script = new File(scriptFile)
+    if (script.exists()) {
+        def shell = new GroovyShell(classLoader, new Binding(ctx: appCtx, grailsApplication: grailsApp))
+        shell.evaluate(script.text)
+    } else {
+        event("StatusError", ["Designated script doesn't exist: $scriptFile"])
+    }
+}
