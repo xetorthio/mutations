@@ -22,7 +22,10 @@ class CreateMutationTests extends AbstractCliTestCase {
         execute(["create-mutation", "SomeTest"])
         assertEquals 0, waitForProcess()
         assertTrue output.contains("Created new mutation")
-        println output
-        output.find(/Created new mutation: \s/, { println it })
+        output.find(/Created new mutation:\s(.*)/, { matched, fileName ->
+                def file = new File(fileName)
+                assert file.exists()
+                file.delete()
+            })
     }
 }

@@ -9,67 +9,58 @@ includeTargets << grailsScript("Init")
 includeTargets << grailsScript("Package")
 includeTargets << grailsScript("Bootstrap")
 
-target(main: "Mutate the db to the latests mutation") {
+target(main: "Mutate the db to the previous mutation") {
     //first check if there is at least one mutation
     def mutationsDir = new File("${basedir}/grails-app/mutations/")
     if(mutationsDir.listFiles().size()) {
         loadGrailsContext()
         
+        def existingMutations = getExistingMutations(mutationsDir)
+        def lastMutation = getLastMutation()
 
-        def appliedMutations = getAppliedMutations()
-        def mutationsCache = [:]
-        def availableMutations = getAvailableMutations(mutationsDir, mutationsCache)
-
-        availableMutations.removeAll(appliedMutations)
-        availableMutations.plus(appliedMutations)
-
-        if(availableMutations.size()==0) {
-            println "The db is already at the last mutation."
+        if(!lastMutation) {
+            println "There is no previous mutation."
             exit(1)
         }
-        applyMutations(availableMutations, mutationsCache)
+        rollbackMutation(lastMutation, existingMutations)
     } else {
-        println "The db is already at the last mutation."
+        println "There is no previous mutation."
         exit(1)
     }
 }
 
-def applyMutations(availableMutations, mutationsCache) {
+def rollbackMutation(lastMutation, existingMutations) {
     ClassLoader parent = getClass().getClassLoader();
     GroovyClassLoader loader = new GroovyClassLoader(parent);
     loader.clearCache();
-    availableMutations.each {
-        Class groovyClass = loader.parseClass(mutationsCache[it]);
-        groovyClass.getMetaClass().executeSQL = { sql ->
-            getSession().createSQLQuery(sql).executeUpdate()
-        }
-        GroovyObject groovyObject = (GroovyObject) groovyClass.newInstance();
-        println "Applying mutation: ${mutationsCache[it]}"
-        groovyObject.up()
-        getSession().createSQLQuery("INSERT INTO schema_mutations (mutation) VALUES (${it})").executeUpdate()
+    Class groovyClass = loader.parseClass(existingMutations[lastMutation]);
+    groovyClass.getMetaClass().executeSQL = { sql ->
+        getSession().createSQLQuery(sql).executeUpdate()
     }
+    GroovyObject groovyObject = (GroovyObject) groovyClass.newInstance();
+    println "Rollback mutation: ${existingMutations[lastMutation]}"
+    groovyObject.down()
+    getSession().createSQLQuery("DELETE FROM schema_mutations WHERE mutation = ${lastMutation}").executeUpdate()
 }
 
-def getAvailableMutations(mutationsDir, mutationsCache) {
-    def availableMutations = []
+def getExistingMutations(mutationsDir) {
+    def existingMutations = [:]
     mutationsDir.eachFile {
         def mutationsVersion = it.name.split("_")[0]
-        availableMutations << mutationsVersion
-        mutationsCache[mutationsVersion]=it
+        existingMutations[mutationsVersion]=it
     }
-    return availableMutations
+    return existingMutations
 }
 
-def getAppliedMutations() {
+def getLastMutation() {
     def session = getSession()
-    def mutated
+    def mutation = null
     try {
-        mutated = session.createSQLQuery("SELECT mutation FROM schema_mutations").list()
+        mutation = session.createSQLQuery("SELECT MAX(mutation) FROM schema_mutations").list().get(0)
     } catch(org.hibernate.exception.SQLGrammarException ex) {
-        println "Creating table schema_mutations"
-        session.createSQLQuery("CREATE TABLE public.schema_mutations (mutation BIGINT)").executeUpdate()
-        mutated = session.createSQLQuery("SELECT mutation FROM schema_mutations").list()
+        println ex
     }
+    return mutation
 }
 
 def getSession() {
