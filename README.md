@@ -11,9 +11,24 @@ In order to install this plugin just type:
 To create a new mutation (a unit of change), just type:
     grails create-mutation SomeChange
 
-This will generate a file in your grails-app/mutations folder. The name of the file is the timestamp + lowercase of the mutation name.
+This will generate a file in your grails-app/mutations folder. The name of the file is the timestamp + lowercase of the mutation name (i.e. 20100430140545933_some_change.groovy).
 
-You should edit that file and add code to the up() method and down() method. The up() method will be executed to mutate your database. The down() method will be executed to revert a mutation.
+You should edit that file and add code to the up() and down() methods. 
+The up() method will be executed to mutate your database. 
+The down() method will be executed to revert a mutation.
+
+    class SomeChange {
+        void up() {
+            executeSQL("CREATE TABLE foo (bar int)");
+        }
+        void down() {
+            executeSQL("DROP TABLE foo");
+        }
+    }
+
+There is a facillity method that enables you to execute native SQL on the database.
+
+Also remember that when the mutation is executed you have all the grails context available. That means domain classes, controllers, services, etc.
 
 To mutate your database to the last mutation just type:
     grails mutate
