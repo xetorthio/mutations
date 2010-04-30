@@ -38,7 +38,7 @@ def applyMutations(availableMutations, mutationsCache) {
     ClassLoader parent = getClass().getClassLoader();
     GroovyClassLoader loader = new GroovyClassLoader(parent);
     loader.clearCache();
-    availableMutations.each {
+    availableMutations.sort().each {
         Class groovyClass = loader.parseClass(mutationsCache[it]);
         groovyClass.getMetaClass().executeSQL = { sql ->
             getSession().createSQLQuery(sql).executeUpdate()
