@@ -67,7 +67,7 @@ def getAppliedMutations() {
         mutated = session.createSQLQuery("SELECT mutation FROM schema_mutations").list()
     } catch(org.hibernate.exception.SQLGrammarException ex) {
         println "Creating table schema_mutations"
-        session.createSQLQuery("CREATE TABLE public.schema_mutations (mutation BIGINT)").executeUpdate()
+        session.createSQLQuery("CREATE TABLE schema_mutations (mutation VARCHAR(20) not null, CONSTRAINT pk_mutation PRIMARY KEY(mutation))").executeUpdate()
         mutated = session.createSQLQuery("SELECT mutation FROM schema_mutations").list()
     }
 }

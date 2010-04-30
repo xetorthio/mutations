@@ -15,7 +15,7 @@ target(main: "Create a database mutation") {
     fileName = currentTimestamp.toString().replaceAll(/[\s|:|\.|\-]/, { it = '' }) + className.replaceAll(/[A-Z]/, { it = '_' + it }).toLowerCase() + ".groovy"
     File dir = new File("${basedir}/grails-app/mutations/")
     File scriptFile = new File(dir, fileName)
-    scriptFile << "import grails.mutations.Mutation\n\nclass ${className} extends Mutation {\n    void up() {\n        // UP content goes here\n    }\n\n    void down() {\n        // DOWN content goes here\n    }\n}\n"
+    scriptFile << "class ${className} {\n    void up() {\n        // UP content goes here\n    }\n\n    void down() {\n        // DOWN content goes here\n    }\n}\n"
     println "Created new mutation: " + scriptFile
 }
 
