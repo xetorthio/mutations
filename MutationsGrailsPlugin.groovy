@@ -1,4 +1,4 @@
-class GrailsMutationsGrailsPlugin {
+class MutationsGrailsPlugin {
     def version = 0.1
     def title = "A database migration framework for Grails"
     def grailsVersion = "1.2.2 >"
