@@ -2,6 +2,7 @@ package mutations
 
 import grails.test.*
 import groovy.mock.interceptor.*
+import org.codehaus.groovy.grails.commons.ApplicationHolder
 
 class CreateMutationTests extends AbstractCliTestCase {
     protected void setUp() {
