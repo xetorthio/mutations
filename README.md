@@ -6,7 +6,7 @@ Grails Mutations plugin is a simple solution to the problem of managing incremen
 
 In order to install this plugin just type:
 
-    grails install-plugin mutations
+    grails install-plugin http://github.com/downloads/xetorthio/mutations/grails-mutations-0.1.zip
 
 To create a new mutation (a unit of change), just type:
     grails create-mutation SomeChange
