@@ -7,4 +7,11 @@ class MutationsGrailsPlugin {
     def description = "Grails Mutations plugin is a simple solution to the problem of managing incremental changes to the databases over time. It is called Mutation because there are a lot of Migration framework out there and it seems more accurate to say that the DB is being mutated. Each mutation is versioned and tracked in the database itself, so it is easy to detect when it need to be applied."
     def documentation = "http://github.com/xetorthio/mutations"
     def loadAfter = ['core', 'hibernate']
+    def pluginExcludes = [
+        'test/**/*',
+        'grails-app/**/*',
+        'lib/**/*',
+        'src/**/*',
+        'web-app/**/*'
+    ]
 }
